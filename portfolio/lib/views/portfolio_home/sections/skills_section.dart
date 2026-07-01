@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-// ----------------------------------------------------
-// 1. DATA CONFIGURATION MODELS
-// ----------------------------------------------------
 class SkillItem {
   final String name;
   final double mastery; // Value between 0.0 and 1.0 for graphic visual bars
@@ -11,9 +8,6 @@ class SkillItem {
   SkillItem({required this.name, required this.mastery, this.svgPath});
 }
 
-// ----------------------------------------------------
-// 3. MAIN SECTION CONTAINER
-// ----------------------------------------------------
 Widget skillsSection(bool isMobile, {required GlobalKey key}) {
   return Container(
     key: key,

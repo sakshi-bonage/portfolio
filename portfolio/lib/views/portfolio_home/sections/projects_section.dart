@@ -38,7 +38,7 @@ class _AnimatedProjectsSectionState extends State<_AnimatedProjectsSection> {
       'description':
           'A comprehensive digital storefront designed for scale. Featuring real-time inventory, secure checkout, and a designer-led UI system that prioritizes user conversion and brand loyalty.',
       'imagePath': 'assets/project1.jpg',
-      'tech': ['Flutter', 'REST API', 'E-Commerce', 'State Management'],
+      'tech': ['Flutter', 'REST API', 'Dart', 'State Management'],
       'url': 'https://github.com',
     },
   ];
