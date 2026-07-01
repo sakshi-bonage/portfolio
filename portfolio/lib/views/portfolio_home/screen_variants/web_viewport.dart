@@ -6,7 +6,8 @@ import '../sections/skills_section.dart';
 import '../sections/achievements_section.dart'; 
 import '../sections/projects_section.dart';
 import '../sections/contact_section.dart';
-import '../sections/footer_section.dart'; // Added missing footer section reference import
+import '../sections/experience_section.dart';
+import '../sections/footer_section.dart';
 
 class WebViewport extends StatelessWidget {
   final GlobalKey heroKey;
@@ -37,6 +38,7 @@ class WebViewport extends StatelessWidget {
           HeroSection(sectionKey: heroKey),
           AboutSection(sectionKey: aboutKey),
           SkillsSection(sectionKey: skillsKey),
+          ExperienceSection(sectionKey: GlobalKey()),
           AchievementsSection(sectionKey: achievementsKey), 
           ProjectsSection(sectionKey: projectsKey, isMobile: false),
           ContactSection(sectionKey: contactKey),

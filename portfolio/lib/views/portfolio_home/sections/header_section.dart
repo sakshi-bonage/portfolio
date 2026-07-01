@@ -1,369 +1,283 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../services/git_service.dart';
 import '../../../services/linkedin_service.dart';
 
-class StickyHeaderBar extends StatefulWidget {
+/// Configuration data structure to simplify key passing logic across nav items
+class NavSectionConfig {
+  final String title;
+  final GlobalKey targetKey;
+
+  const NavSectionConfig({required this.title, required this.targetKey});
+}
+
+class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isMobile;
   final ScrollController scrollController;
   final GlobalKey<ScaffoldState> scaffoldKey;
-  final GlobalKey heroKey;
-  final GlobalKey aboutKey;
-  final GlobalKey skillsKey;
-  final GlobalKey projectsKey;
-  final GlobalKey achievementsKey;
-  final GlobalKey contactKey;
   final void Function(GlobalKey) scrollToSection;
+  final List<NavSectionConfig> sections;
 
   const StickyHeaderBar({
     super.key,
     required this.isMobile,
     required this.scrollController,
     required this.scaffoldKey,
-    required this.heroKey,
-    required this.aboutKey,
-    required this.skillsKey,
-    required this.projectsKey,
-    required this.achievementsKey,
-    required this.contactKey,
     required this.scrollToSection,
+    required this.sections,
   });
 
   @override
-  State<StickyHeaderBar> createState() => _StickyHeaderBarState();
-}
-
-class _StickyHeaderBarState extends State<StickyHeaderBar> {
-  final ValueNotifier<String> _activeSection = ValueNotifier<String>('HOME');
-  bool _isScrolled = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.scrollController.addListener(_scrollObserver);
-  }
-
-  @override
-  void dispose() {
-    widget.scrollController.removeListener(_scrollObserver);
-    _activeSection.dispose();
-    super.dispose();
-  }
-
-  // Smart section observer to track user scrolling positions in real-time
-  void _scrollObserver() {
-    if (!widget.scrollController.hasClients) return;
-
-    final offset = widget.scrollController.offset;
-
-    if (offset > 30 && !_isScrolled) {
-      setState(() => _isScrolled = true);
-    } else if (offset <= 30 && _isScrolled) {
-      setState(() => _isScrolled = false);
-    }
-
-    // Dynamic section highlights based on average vertical pixel distributions
-    if (offset < 500) {
-      _activeSection.value = 'HOME';
-    } else if (offset >= 500 && offset < 1200) {
-      _activeSection.value = 'ABOUT';
-    } else if (offset >= 1200 && offset < 2000) {
-      _activeSection.value = 'SKILLS';
-    } else if (offset >= 2000 && offset < 3200) {
-      _activeSection.value = 'PROJECTS';
-    } else if (offset >= 3200) {
-      _activeSection.value = 'MILESTONES';
-    }
-  }
+  Size get preferredSize => Size.fromHeight(isMobile ? 64 : 80);
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: widget.isMobile ? 24 : 60,
-        vertical: _isScrolled ? 14 : 24,
-      ),
-      decoration: BoxDecoration(
-        // High-end cyber glassmorphic tint profile
-        color: _isScrolled
-            ? const Color(0xFF0D0E12).withOpacity(0.70)
-            : Colors.transparent,
-        border: Border(
-          bottom: BorderSide(
-            color: _isScrolled
-                ? const Color(0xFF45F3FF).withOpacity(0.12)
-                : Colors.transparent,
-            width: 1.5,
+    // ListenableBuilder updates the header layout dynamically without triggering broad page rebuilds
+    return ListenableBuilder(
+      listenable: scrollController,
+      builder: (context, _) {
+        final double offset = scrollController.hasClients ? scrollController.offset : 0.0;
+        final bool isScrolled = offset > 20;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          width: double.infinity,
+          height: preferredSize.height,
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 24 : 40,
           ),
-        ),
-      ),
-      // Glassmorphic background frosting pipeline filter
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: _isScrolled ? 16 : 0,
-            sigmaY: _isScrolled ? 16 : 0,
+          decoration: BoxDecoration(
+            color: isScrolled
+                ? const Color(0xFF0B0C10).withValues(alpha: 0.95)
+                : const Color(0xFF0B0C10),
+            border: Border(
+              bottom: BorderSide(
+                color: isScrolled
+                    ? const Color(0xFF1F2937).withValues(alpha: 0.4)
+                    : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            boxShadow: isScrolled
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
           ),
           child: SafeArea(
             bottom: false,
-            top: false,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildLogoBranding(),
-                if (!widget.isMobile)
-                  _buildDesktopNavigationHub()
-                else
-                  _buildMobileQuickActions(),
+                _buildBrandingLogo(),
+                if (!isMobile) _buildDesktopNav() else _buildMobileNavActions(),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLogoBranding() {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () => widget.scrollToSection(widget.heroKey),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF45F3FF), Color(0xFF00B4D8)],
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'SRB',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight:
-                      FontWeight.w900, //  Success: Thickest production weight
-                  color: Color(0xFF0D0E12),
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'PORTFOLIO',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 2.0,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDesktopNavigationHub() {
-    return ValueListenableBuilder<String>(
-      valueListenable: _activeSection,
-      builder: (context, currentTab, _) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _TabAnchorLink(
-              label: 'HOME',
-              isActive: currentTab == 'HOME',
-              onTap: () => widget.scrollToSection(widget.heroKey),
-            ),
-            _TabAnchorLink(
-              label: 'ABOUT',
-              isActive: currentTab == 'ABOUT',
-              onTap: () => widget.scrollToSection(widget.aboutKey),
-            ),
-            _TabAnchorLink(
-              label: 'SKILLS',
-              isActive: currentTab == 'SKILLS',
-              onTap: () => widget.scrollToSection(widget.skillsKey),
-            ),
-            _TabAnchorLink(
-              label: 'PROJECTS',
-              isActive: currentTab == 'PROJECTS',
-              onTap: () => widget.scrollToSection(widget.projectsKey),
-            ),
-            _TabAnchorLink(
-              label: 'MILESTONES',
-              isActive: currentTab == 'MILESTONES',
-              onTap: () => widget.scrollToSection(widget.achievementsKey),
-            ),
-            const SizedBox(width: 24),
-            _buildContactCTA(),
-          ],
         );
       },
     );
   }
 
-  Widget _buildContactCTA() {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () => widget.scrollToSection(widget.contactKey),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF13151A),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: const Color(0xFF45F3FF).withOpacity(0.3),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF45F3FF).withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'HIRE ME',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF45F3FF),
-                  letterSpacing: 1.5,
-                ),
-              ),
-              SizedBox(width: 8),
-              Icon(Icons.bolt, size: 14, color: Color(0xFF45F3FF)),
-            ],
+  Widget _buildBrandingLogo() {
+    return InkWell(
+      onTap: () => scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
+      ),
+      hoverColor: Colors.transparent,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Text(
+          '<> SRB',
+          style: TextStyle(
+            fontSize: isMobile ? 22 : 26,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF45F3FF),
+            letterSpacing: 1.5,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMobileQuickActions() {
+  Widget _buildDesktopNav() {
+    // Splits the last array entry out to act explicitly as the Call To Action button
+    final menuItems = sections.take(sections.length - 1).toList();
+    final ctaItem = sections.isNotEmpty ? sections.last : null;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildMobileCircleIcon(
-          Icons.link_rounded,
-          () => LinkedInService.launchProfile(),
-        ),
-        const SizedBox(width: 10),
-        _buildMobileCircleIcon(
-          Icons.code_rounded,
-          () => GitHubService.launchProfile(),
-        ),
-        const SizedBox(width: 14),
-        IconButton(
-          icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 26),
-          onPressed: () => widget.scaffoldKey.currentState?.openDrawer(),
-        ),
+        ...menuItems.map((section) => _AnimatedNavButton(
+              text: section.title.toUpperCase(),
+              onPressed: () => scrollToSection(section.targetKey),
+            )),
+        if (ctaItem != null) ...[
+          const SizedBox(width: 16),
+          _buildCTAButton(ctaItem),
+        ],
       ],
     );
   }
 
-  Widget _buildMobileCircleIcon(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF13151A),
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.04)),
+  Widget _buildCTAButton(NavSectionConfig ctaItem) {
+    return ElevatedButton(
+      onPressed: () => scrollToSection(ctaItem.targetKey),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF45F3FF),
+        foregroundColor: const Color(0xFF0B0C10),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, size: 16, color: const Color(0xFF9CA3AF)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      ).copyWith(
+        overlayColor: WidgetStateProperty.resolveWith<Color?>(
+          (states) {
+            if (states.contains(WidgetState.hovered)) {
+              return const Color(0xFF00E5FF).withValues(alpha: 0.2);
+            }
+            return null;
+          },
+        ),
       ),
+      child: Text(
+        ctaItem.title.toUpperCase(),
+        style: const TextStyle(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileNavActions() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.link_rounded),
+          onPressed: () => LinkedInService.launchProfile(),
+          tooltip: 'LinkedIn Profile',
+          color: const Color(0xFF9CA3AF),
+          iconSize: 22,
+        ),
+        IconButton(
+          icon: const Icon(Icons.code_rounded),
+          onPressed: () => GitHubService.launchProfile(),
+          tooltip: 'GitHub Profile',
+          color: const Color(0xFF9CA3AF),
+          iconSize: 22,
+        ),
+        const SizedBox(width: 4),
+        Container(
+          height: 32,
+          width: 1,
+          color: const Color(0xFF1F2937),
+        ),
+        const SizedBox(width: 4),
+        IconButton(
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: () => scaffoldKey.currentState?.openDrawer(),
+          tooltip: 'Open Menu',
+          color: Colors.white,
+          iconSize: 26,
+        ),
+      ],
     );
   }
 }
 
-// ----------------------------------------------------
-// PRIVATE HOVER LINK COMPONENT WITH ACCENT SLIDERS
-// ----------------------------------------------------
-class _TabAnchorLink extends StatefulWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
+/// Layout-Stabilized Hover Navigation button with micro-shadow slide indicator
+class _AnimatedNavButton extends StatefulWidget {
+  final String text;
+  final VoidCallback onPressed;
 
-  const _TabAnchorLink({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
+  const _AnimatedNavButton({
+    required this.text,
+    required this.onPressed,
   });
 
   @override
-  State<_TabAnchorLink> createState() => _TabAnchorLinkState();
+  State<_AnimatedNavButton> createState() => _AnimatedNavButtonState();
 }
 
-class _TabAnchorLinkState extends State<_TabAnchorLink> {
-  final ValueNotifier<bool> _hoverState = ValueNotifier<bool>(false);
+class _AnimatedNavButtonState extends State<_AnimatedNavButton> {
+  final ValueNotifier<bool> _isHoveredNotifier = ValueNotifier<bool>(false);
 
   @override
   void dispose() {
-    _hoverState.dispose();
+    _isHoveredNotifier.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    const Duration animationDuration = Duration(milliseconds: 200);
+    const Curve animationCurve = Curves.easeOutCubic;
+
     return MouseRegion(
-      onEnter: (_) => _hoverState.value = true,
-      onExit: (_) => _hoverState.value = false,
+      onEnter: (_) => _isHoveredNotifier.value = true,
+      onExit: (_) => _isHoveredNotifier.value = false,
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: widget.onPressed,
+        behavior: HitTestBehavior.opaque,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ValueListenableBuilder<bool>(
-            valueListenable: _hoverState,
-            builder: (context, hovered, _) {
-              final bool isHighlighted = widget.isActive || hovered;
+            valueListenable: _isHoveredNotifier,
+            builder: (context, isHovered, child) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
+                    duration: animationDuration,
+                    curve: animationCurve,
                     style: TextStyle(
-                      fontSize: 12,
+                      color: isHovered ? const Color(0xFF45F3FF) : const Color(0xFF9CA3AF),
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
-                      color: isHighlighted
-                          ? const Color(0xFF45F3FF)
-                          : const Color(0xFF9CA3AF),
                     ),
-                    child: Text(widget.label),
+                    child: Text(widget.text),
                   ),
                   const SizedBox(height: 6),
-
-                  // Sliding underline track line indicator
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                    height: 2.5,
-                    width: widget.isActive ? 20 : (hovered ? 12 : 0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF45F3FF),
-                      borderRadius: BorderRadius.circular(2),
-                      boxShadow: [
-                        if (widget.isActive)
-                          BoxShadow(
-                            color: const Color(0xFF45F3FF).withOpacity(0.4),
-                            blurRadius: 6,
-                          ),
-                      ],
-                    ),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const SizedBox(height: 2, width: 24), // Layout structural baseline
+                      AnimatedContainer(
+                        duration: animationDuration,
+                        curve: animationCurve,
+                        height: 2,
+                        width: isHovered ? 24 : 0,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF45F3FF),
+                          borderRadius: BorderRadius.circular(2),
+                          boxShadow: isHovered
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF45F3FF).withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  )
+                                ]
+                              : [],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               );

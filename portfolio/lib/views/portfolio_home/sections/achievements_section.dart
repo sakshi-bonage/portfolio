@@ -196,15 +196,15 @@ class _Achievement3DCardState extends State<_Achievement3DCard> {
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: _isHovered
-                    ? Colors.cyanAccent.withOpacity(0.3)
-                    : Colors.white.withOpacity(0.03),
+                    ? Colors.cyanAccent.withValues(alpha: 0.3)
+                    : Colors.white.withValues(alpha: 0.03),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
                   color: _isHovered
-                      ? Colors.cyanAccent.withOpacity(0.05)
-                      : Colors.black.withOpacity(0.2),
+                      ? Colors.cyanAccent.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.2),
                   blurRadius: _isHovered ? 45 : 30,
                   offset: Offset(0, _isHovered ? 20 : 12),
                 ),
@@ -226,7 +226,7 @@ class _Achievement3DCardState extends State<_Achievement3DCard> {
                       boxShadow: [
                         if (_isHovered)
                           BoxShadow(
-                            color: Colors.blueAccent.withOpacity(0.35),
+                            color: Colors.blueAccent.withValues(alpha: 0.35),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),

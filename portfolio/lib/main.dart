@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-
-// Precise relative path to your multi-viewport architecture container layout shell
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'views/portfolio_home/layout_wrapper.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   runApp(const SakshiPortfolioApp());
 }
 
@@ -20,7 +21,6 @@ class SakshiPortfolioApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0D0E12),
         useMaterial3: true,
       ),
-      // Safely instantiates and calls your layout wrapper architecture module
       home: const LayoutWrapper(),
     );
   }

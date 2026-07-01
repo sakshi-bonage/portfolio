@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-// ----------------------------------------------------
-// 1. DATA LAYERING CONFIGURATION MODEL
-// ----------------------------------------------------
 class ExperienceItem {
   final String period;
   final String role;
@@ -21,9 +18,6 @@ class ExperienceItem {
   });
 }
 
-// ----------------------------------------------------
-// 2. MAIN TIMELINE CONTAINER VIEWPORT
-// ----------------------------------------------------
 class ExperienceSection extends StatelessWidget {
   final GlobalKey sectionKey;
 
@@ -34,13 +28,13 @@ class ExperienceSection extends StatelessWidget {
     final double width = MediaQuery.of(context).size.width;
     final bool isMobile = width < 950;
 
-    // Ordered career history nodes matching your background parameters
     final List<ExperienceItem> items = [
       const ExperienceItem(
         period: '2026 — PRESENT',
         role: 'Junior Flutter Developer Intern',
         company: 'AskTechsolution',
-        description: 'Architecting dynamic native layouts, implementing asynchronous state streams, and standardizing multi-viewport compatibility modules across mobile and web deployments.',
+        description:
+            'Architecting dynamic native layouts, implementing asynchronous state streams, and standardizing multi-viewport compatibility modules across mobile and web deployments.',
         technologies: ['Flutter', 'Dart', 'State Management', 'REST APIs', 'Git'],
         isCurrent: true,
       ),
@@ -48,7 +42,8 @@ class ExperienceSection extends StatelessWidget {
         period: '2024 — 2026',
         role: 'Computer Engineering Project Lead',
         company: 'CSMSS Chh. Shahu College of Engineering',
-        description: 'Designed internal algorithm management tool assemblies, directed developer workshops, and engineered responsive cross-platform structural mock projects.',
+        description:
+            'Designed internal algorithm management tool assemblies, directed developer workshops, and engineered responsive cross-platform structural mock projects.',
         technologies: ['Java', 'Python', 'UI Architecture', 'Data Structures'],
         isCurrent: false,
       ),
@@ -57,7 +52,7 @@ class ExperienceSection extends StatelessWidget {
     return Container(
       key: sectionKey,
       width: double.infinity,
-      color: const Color(0xFF0D0E12), // Deep Cinematic Dark Base Canvas
+      color: const Color(0xFF0D0E12),
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 24 : 140,
         vertical: isMobile ? 80 : 120,
@@ -65,7 +60,6 @@ class ExperienceSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Title Header Indicators
           Row(
             children: [
               Container(
@@ -102,7 +96,6 @@ class ExperienceSection extends StatelessWidget {
           ),
           const SizedBox(height: 64),
 
-          // Adaptive Stream Renderer Loop
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -121,9 +114,6 @@ class ExperienceSection extends StatelessWidget {
   }
 }
 
-// ----------------------------------------------------
-// 3. RESPONSIVE TIMELINE NODE ENGINE
-// ----------------------------------------------------
 class _ExperienceTimelineNode extends StatefulWidget {
   final ExperienceItem item;
   final bool isLast;
@@ -184,7 +174,7 @@ class _ExperienceTimelineNodeState extends State<_ExperienceTimelineNode> {
               const SizedBox(width: 24),
             ],
 
-            // Center Column: Interactive Central Node Branch Line
+            // Center Column: Timeline dot and line
             Column(
               children: [
                 Padding(
@@ -204,7 +194,7 @@ class _ExperienceTimelineNodeState extends State<_ExperienceTimelineNode> {
                           boxShadow: hovered || widget.item.isCurrent
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF45F3FF).withOpacity(0.3),
+                                    color: const Color(0xFF45F3FF).withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     spreadRadius: 2,
                                   )
@@ -221,7 +211,7 @@ class _ExperienceTimelineNodeState extends State<_ExperienceTimelineNode> {
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Container(
                         width: 2,
-                        color: Colors.white.withOpacity(0.04),
+                        color: Colors.white.withValues(alpha: 0.04),
                       ),
                     ),
                   ),
@@ -229,7 +219,7 @@ class _ExperienceTimelineNodeState extends State<_ExperienceTimelineNode> {
             ),
             const SizedBox(width: 32),
 
-            // Right Column: Information Content Card Panel
+            // Right Column: Content Card
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 48.0),
@@ -241,19 +231,21 @@ class _ExperienceTimelineNodeState extends State<_ExperienceTimelineNode> {
                       curve: Curves.easeOutCubic,
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: hovered ? const Color(0xFF161922) : const Color(0xFF13151A),
+                        color: hovered
+                            ? const Color(0xFF161922)
+                            : const Color(0xFF13151A),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: hovered
-                              ? const Color(0xFF45F3FF).withOpacity(0.2)
-                              : Colors.white.withOpacity(0.03),
+                              ? const Color(0xFF45F3FF).withValues(alpha: 0.2)
+                              : Colors.white.withValues(alpha: 0.03),
                           width: 1.2,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: hovered
-                                ? const Color(0xFF45F3FF).withOpacity(0.04)
-                                : Colors.black.withOpacity(0.15),
+                                ? const Color(0xFF45F3FF).withValues(alpha: 0.04)
+                                : Colors.black.withValues(alpha: 0.15),
                             blurRadius: 30,
                             offset: const Offset(0, 10),
                           ),
@@ -266,89 +258,81 @@ class _ExperienceTimelineNodeState extends State<_ExperienceTimelineNode> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Period Display for Mobile Layout stacking configurations
                       if (widget.isMobile) ...[
                         Text(
                           widget.item.period,
                           style: const TextStyle(
-                                    color: const Color(0xFF45F3FF),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                              ],
-                              Text(
-                                widget.item.role,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                widget.item.company,
-                                style: const TextStyle(
-                                  color: Colors.white38,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                widget.item.description,
-                                style: const TextStyle(
-                                  color: Color(0xFF9EAFBC),
-                                  height: 1.6,
-                                  fontSize: 13.5,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              
-                              // Localized Micro-Tag Chip Capsules Layout Wrap
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: widget.item.technologies.map((tech) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF1B1E26),
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                        color: Colors.white.withOpacity(0.02),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      tech,
-                                      style: const TextStyle(
-                                        color: Color(0xFFB0C4DE),
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ],
+                            color: Color(0xFF45F3FF),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
                           ),
                         ),
+                        const SizedBox(height: 8),
+                      ],
+                      Text(
+                        widget.item.role,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.3,
+                        ),
                       ),
-                    
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.item.company,
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        widget.item.description,
+                        style: const TextStyle(
+                          color: Color(0xFF9EAFBC),
+                          height: 1.6,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: widget.item.technologies.map((tech) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1B1E26),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.02),
+                              ),
+                            ),
+                            child: Text(
+                              tech,
+                              style: const TextStyle(
+                                color: Color(0xFFB0C4DE),
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ),
-                
+                ),
+              ),
+            ),
           ],
-            
-          ),
+        ),
       ),
-        );
-      
-    
+    );
   }
 }
