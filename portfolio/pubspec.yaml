@@ -68,6 +68,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    - assets/images/profile.jpeg
+    - assets/images/project1.png
+    - assets/images/project2.png
+    - assets/images/project3.png
     - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see

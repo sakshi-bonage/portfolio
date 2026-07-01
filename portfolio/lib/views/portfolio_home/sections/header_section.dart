@@ -11,79 +11,52 @@ class NavSectionConfig {
 }
 
 class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
-  final bool isMobile;
   final ScrollController scrollController;
   final GlobalKey<ScaffoldState> scaffoldKey;
-  final void Function(GlobalKey) scrollToSection;
+  final void Function(GlobalKey targetKey) scrollToSection;
   final List<NavSectionConfig> sections;
 
   const StickyHeaderBar({
     super.key,
-    required this.isMobile,
     required this.scrollController,
     required this.scaffoldKey,
     required this.scrollToSection,
     required this.sections,
   });
 
+  /// Dynamic size reporting based on device layout thresholds
   @override
-  Size get preferredSize => Size.fromHeight(isMobile ? 64 : 80);
+  Size get preferredSize => const Size.fromHeight(80.0);
 
   @override
   Widget build(BuildContext context) {
-    // ListenableBuilder updates the header layout dynamically without triggering broad page rebuilds
-    return ListenableBuilder(
-      listenable: scrollController,
-      builder: (context, _) {
-        final double offset = scrollController.hasClients ? scrollController.offset : 0.0;
-        final bool isScrolled = offset > 20;
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+    
+    // Core Layout Breakpoints
+    final bool isMobile = screenWidth < 640;
+    final bool isTablet = screenWidth >= 640 && screenWidth < 1024;
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          width: double.infinity,
-          height: preferredSize.height,
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 24 : 40,
-          ),
-          decoration: BoxDecoration(
-            color: isScrolled
-                ? const Color(0xFF0B0C10).withValues(alpha: 0.95)
-                : const Color(0xFF0B0C10),
-            border: Border(
-              bottom: BorderSide(
-                color: isScrolled
-                    ? const Color(0xFF1F2937).withValues(alpha: 0.4)
-                    : Colors.transparent,
-                width: 1,
-              ),
-            ),
-            boxShadow: isScrolled
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildBrandingLogo(),
-                if (!isMobile) _buildDesktopNav() else _buildMobileNavActions(),
-              ],
-            ),
-          ),
-        );
-      },
+    return _StickyHeaderBackground(
+      scrollController: scrollController,
+      height: isMobile ? 64.0 : preferredSize.height,
+      horizontalPadding: isMobile ? 16.0 : (isTablet ? 32.0 : 48.0),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildBrandingLogo(isMobile),
+            if (isMobile)
+              _buildMobileNavActions()
+            else
+              _buildResponsiveDesktopNav(isTablet),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildBrandingLogo() {
+  Widget _buildBrandingLogo(bool isMobile) {
     return InkWell(
       onTap: () => scrollController.animateTo(
         0,
@@ -98,7 +71,7 @@ class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
         child: Text(
           '<> SRB',
           style: TextStyle(
-            fontSize: isMobile ? 22 : 26,
+            fontSize: isMobile ? 20.0 : 24.0,
             fontWeight: FontWeight.w900,
             color: const Color(0xFF45F3FF),
             letterSpacing: 1.5,
@@ -108,10 +81,12 @@ class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  Widget _buildDesktopNav() {
-    // Splits the last array entry out to act explicitly as the Call To Action button
-    final menuItems = sections.take(sections.length - 1).toList();
-    final ctaItem = sections.isNotEmpty ? sections.last : null;
+  Widget _buildResponsiveDesktopNav(bool isTablet) {
+    if (sections.isEmpty) return const SizedBox.shrink();
+    
+    // Explicitly parse CTA from regular text items
+    final menuItems = sections.take(sections.length - 1);
+    final ctaItem = sections.last;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -119,16 +94,15 @@ class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
         ...menuItems.map((section) => _AnimatedNavButton(
               text: section.title.toUpperCase(),
               onPressed: () => scrollToSection(section.targetKey),
+              isTablet: isTablet,
             )),
-        if (ctaItem != null) ...[
-          const SizedBox(width: 16),
-          _buildCTAButton(ctaItem),
-        ],
+        SizedBox(width: isTablet ? 12.0 : 20.0),
+        _buildCTAButton(ctaItem, isTablet),
       ],
     );
   }
 
-  Widget _buildCTAButton(NavSectionConfig ctaItem) {
+  Widget _buildCTAButton(NavSectionConfig ctaItem, bool isTablet) {
     return ElevatedButton(
       onPressed: () => scrollToSection(ctaItem.targetKey),
       style: ElevatedButton.styleFrom(
@@ -137,9 +111,12 @@ class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
         elevation: 0,
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 16.0 : 24.0, 
+          vertical: isTablet ? 12.0 : 16.0,
+        ),
       ).copyWith(
         overlayColor: WidgetStateProperty.resolveWith<Color?>(
           (states) {
@@ -152,10 +129,10 @@ class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       child: Text(
         ctaItem.title.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w800,
           letterSpacing: 1.2,
-          fontSize: 13,
+          fontSize: isTablet ? 12.0 : 13.0,
         ),
       ),
     );
@@ -170,30 +147,87 @@ class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: () => LinkedInService.launchProfile(),
           tooltip: 'LinkedIn Profile',
           color: const Color(0xFF9CA3AF),
-          iconSize: 22,
+          iconSize: 20,
         ),
         IconButton(
           icon: const Icon(Icons.code_rounded),
           onPressed: () => GitHubService.launchProfile(),
           tooltip: 'GitHub Profile',
           color: const Color(0xFF9CA3AF),
-          iconSize: 22,
+          iconSize: 20,
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 2),
         Container(
-          height: 32,
+          height: 24,
           width: 1,
           color: const Color(0xFF1F2937),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 2),
         IconButton(
           icon: const Icon(Icons.menu_rounded),
           onPressed: () => scaffoldKey.currentState?.openDrawer(),
           tooltip: 'Open Menu',
           color: Colors.white,
-          iconSize: 26,
+          iconSize: 24,
         ),
       ],
+    );
+  }
+}
+
+/// Extracted background shell to minimize rebuild scopes during active scroll events
+class _StickyHeaderBackground extends StatelessWidget {
+  final ScrollController scrollController;
+  final double height;
+  final double horizontalPadding;
+  final Widget child;
+
+  const _StickyHeaderBackground({
+    required this.scrollController,
+    required this.height,
+    required this.horizontalPadding,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: scrollController,
+      builder: (context, _) {
+        final double offset = scrollController.hasClients ? scrollController.offset : 0.0;
+        final bool isScrolled = offset > 20.0;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          width: double.infinity,
+          height: height,
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          decoration: BoxDecoration(
+            color: isScrolled
+                ? const Color(0xFF0B0C10).withValues(alpha: 0.95)
+                : const Color(0xFF0B0C10),
+            border: Border(
+              bottom: BorderSide(
+                color: isScrolled
+                    ? const Color(0xFF1F2937).withValues(alpha: 0.4)
+                    : Colors.transparent,
+                width: 1.0,
+              ),
+            ),
+            boxShadow: isScrolled
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 12.0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
+          ),
+          child: child,
+        );
+      },
     );
   }
 }
@@ -202,10 +236,12 @@ class StickyHeaderBar extends StatelessWidget implements PreferredSizeWidget {
 class _AnimatedNavButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
+  final bool isTablet;
 
   const _AnimatedNavButton({
     required this.text,
     required this.onPressed,
+    required this.isTablet,
   });
 
   @override
@@ -234,7 +270,10 @@ class _AnimatedNavButtonState extends State<_AnimatedNavButton> {
         onTap: widget.onPressed,
         behavior: HitTestBehavior.opaque,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.isTablet ? 10.0 : 16.0, 
+            vertical: 8.0,
+          ),
           child: ValueListenableBuilder<bool>(
             valueListenable: _isHoveredNotifier,
             builder: (context, isHovered, child) {
@@ -247,7 +286,7 @@ class _AnimatedNavButtonState extends State<_AnimatedNavButton> {
                     curve: animationCurve,
                     style: TextStyle(
                       color: isHovered ? const Color(0xFF45F3FF) : const Color(0xFF9CA3AF),
-                      fontSize: 13,
+                      fontSize: widget.isTablet ? 12.0 : 13.0,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
                     ),
@@ -272,7 +311,7 @@ class _AnimatedNavButtonState extends State<_AnimatedNavButton> {
                                     color: const Color(0xFF45F3FF).withValues(alpha: 0.3),
                                     blurRadius: 4,
                                     offset: const Offset(0, 1),
-                                  )
+                                  ),
                                 ]
                               : [],
                         ),

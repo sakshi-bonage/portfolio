@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 class HeroSection extends StatelessWidget {
   final GlobalKey sectionKey;
 
@@ -492,7 +491,7 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(24),
                               child: Image.asset(
-                                'assets/profile.jpg',
+                                'assets/images/profile.jpeg',
                                 fit: BoxFit.cover,
                                 gaplessPlayback: true,
                                 errorBuilder: (context, error, stackTrace) {

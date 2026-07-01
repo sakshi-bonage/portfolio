@@ -44,8 +44,6 @@ class _LayoutWrapperState extends State<LayoutWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    final bool isMobile = width < 1100;
 
     final sections = [
       NavSectionConfig(title: 'Home', targetKey: _heroKey),
@@ -59,7 +57,6 @@ class _LayoutWrapperState extends State<LayoutWrapper> {
       key: _scaffoldKey,
       backgroundColor: const Color(0xFF0D0E12),
       appBar: StickyHeaderBar(
-        isMobile: isMobile,
         scrollController: _scrollController,
         scaffoldKey: _scaffoldKey,
         scrollToSection: _scrollToSection,

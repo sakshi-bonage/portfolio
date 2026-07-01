@@ -24,7 +24,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
       'category': 'APPS',
       'description':
           'A modern fitness application developed using Flutter and Firebase. Features workout tracking, progress analytics, goal setting, authentication, and responsive UI design.',
-      'imagePath': 'assets/project2.jpg',
+      'imagePath': 'assets/images/project2.png',
       'tech': ['Flutter', 'Firebase', 'Analytics', 'UI/UX'],
       'url': 'https://github.com',
     },
@@ -33,7 +33,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
       'category': 'APPS',
       'description':
           'A comprehensive digital storefront designed for scale. Featuring real-time inventory, secure checkout, and a designer-led UI system that prioritizes user conversion and brand loyalty.',
-      'imagePath': 'assets/project1.jpg',
+      'imagePath': 'assets/images/project1.png',
       'tech': ['Flutter', 'REST API', 'Dart', 'State Management'],
       'url': 'https://github.com',
     },
@@ -42,7 +42,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
       'category': 'WEB',
       'description':
           'A high-performance interactive web application built to exhibit architecture concepts, timeline metrics, and layout animations. Highly customized for screen responsiveness.',
-      'imagePath': 'assets/project3.jpg',
+      'imagePath': 'assets/images/project3.png',
       'tech': [
         'Flutter Web',
         'Dart',
