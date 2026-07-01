@@ -4,583 +4,432 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:emailjs/emailjs.dart' as emailjs;
 
 class ContactSection extends StatefulWidget {
-  final bool isMobile;
   final GlobalKey sectionKey;
 
-  const ContactSection({
-    super.key,
-    required this.isMobile,
-    required this.sectionKey,
-  });
+  const ContactSection({required this.sectionKey, super.key});
 
   @override
   State<ContactSection> createState() => _ContactSectionState();
 }
 
-class _ContactSectionState extends State<ContactSection> with TickerProviderStateMixin {
-  final nameController = TextEditingController();
-  final emailController = TextEditingController();
-  final subjectController = TextEditingController();
-  final messageController = TextEditingController();
+class _ContactSectionState extends State<ContactSection> with SingleTickerProviderStateMixin {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _subjectController = TextEditingController();
+  final _messageController = TextEditingController();
 
-  final ValueNotifier<bool> _isSendingNotifier = ValueNotifier(false);
-  final ValueNotifier<bool> _isSubmitHovered = ValueNotifier(false);
+  // Reactive state management flags
+  final ValueNotifier<bool> _isButtonHovered = ValueNotifier(false);
+  final ValueNotifier<bool> _isCardHovered = ValueNotifier(false);
+  final ValueNotifier<bool> _isSending = ValueNotifier(false);
 
-  // 3D Animation Controllers and States
-  late AnimationController _hoverController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  double _rotateX = 0.0;
-  double _rotateY = 0.0;
-  bool _isCardHovered = false;
-
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-.]+@([\w-]+.)+[\w-]{2,4}$').hasMatch(email);
-  }
-
-  Future<void> sendEmail() async {
-    // Basic Form Validations to prevent blank submissions
-    if (nameController.text.trim().isEmpty) {
-      _showCustomSnackBar("Please enter your name", isError: true);
-      return;
-    }
-    if (emailController.text.trim().isEmpty) {
-      _showCustomSnackBar("Please enter your email address", isError: true);
-      return;
-    }
-    if (!_isValidEmail(emailController.text.trim())) {
-      _showCustomSnackBar("Please enter a valid email address", isError: true);
-      return;
-    }
-    if (messageController.text.trim().isEmpty) {
-      _showCustomSnackBar("Please enter a message description", isError: true);
-      return;
-    }
-
-    _isSendingNotifier.value = true;
-
-    try {
-      await emailjs.send(
-        'service_v88gjq9',
-        'template_6nl26f6',
-        {
-          'from_name': nameController.text.trim(),
-          'from_email': emailController.text.trim(),
-          'subject': subjectController.text.trim().isEmpty 
-              ? 'Portfolio Message' 
-              : subjectController.text.trim(),
-          'message': messageController.text.trim(),
-        },
-        const emailjs.Options(publicKey: 'h7HErSc8CO4hMHOCU'),
-      );
-
-      if (!mounted) return;
-
-      _showCustomSnackBar("Message delivered successfully!", isError: false);
-
-      nameController.clear();
-      emailController.clear();
-      subjectController.clear();
-      messageController.clear();
-    } catch (e) {
-      _showCustomSnackBar(
-        "Failed to route message. Please try again.",
-        isError: true,
-      );
-    } finally {
-      _isSendingNotifier.value = false;
-    }
-  }
-
-  void _showCustomSnackBar(String message, {required bool isError}) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isError
-                  ? Icons.error_outline_rounded
-                  : Icons.check_circle_outline_rounded,
-              color: isError ? Colors.redAccent : const Color(0xFF45F3FF),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF141D26),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(24),
-        duration: const Duration(seconds: 4),
-      ),
-    );
-  }
+  // Smooth 3D animation vector physics targets
+  double _targetX = 0.0;
+  double _targetY = 0.0;
+  double _lerpX = 0.0;
+  double _lerpY = 0.0;
+  late AnimationController _physicsController;
 
   @override
   void initState() {
     super.initState();
-    _hoverController = AnimationController(
+    _physicsController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
+      duration: const Duration(milliseconds: 16),
+    )..addListener(_applySmoothInterpolation);
+  }
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _hoverController, curve: Curves.easeOut),
-    );
+  void _applySmoothInterpolation() {
+    if (!mounted) return;
+    setState(() {
+      _lerpX = _lerpX + (_targetX - _lerpX) * 0.12;
+      _lerpY = _lerpY + (_targetY - _lerpY) * 0.12;
+    });
 
-    _slideAnimation = Tween<Offset>(begin: const Offset(0.0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(parent: _hoverController, curve: Curves.easeOutCubic),
-    );
+    if (_isCardHovered.value && 
+        ((_targetX - _lerpX).abs() > 0.001 || (_targetY - _lerpY).abs() > 0.001)) {
+      _physicsController.forward(from: 0.0);
+    }
+  }
 
-    _hoverController.forward();
+  void _updateGestureOffset(PointerEvent details, Size size) {
+    final double xPos = details.localPosition.dx / size.width;
+    final double yPos = details.localPosition.dy / size.height;
+
+    _targetX = (0.5 - yPos) * 0.12; 
+    _targetY = (xPos - 0.5) * 0.12; 
+    
+    if (!_physicsController.isAnimating) {
+      _physicsController.forward(from: 0.0);
+    }
+  }
+
+  void _resetGestureOffset() {
+    _targetX = 0.0;
+    _targetY = 0.0;
+    if (!_physicsController.isAnimating) {
+      _physicsController.forward(from: 0.0);
+    }
+  }
+
+  Future<void> _sendEmailViaEmailJS() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    _isSending.value = true;
+    try {
+      // Connect template schema to dispatch through EmailJS infrastructure pipeline
+      final response = await emailjs.send(
+        'YOUR_SERVICE_ID',
+        'YOUR_TEMPLATE_ID',
+        {
+          'from_name': _nameController.text.trim(),
+          'from_email': _emailController.text.trim(),
+          'subject': _subjectController.text.trim(),
+          'message': _messageController.text.trim(),
+        },
+        const emailjs.Options(
+          publicKey: 'YOUR_PUBLIC_KEY',
+          privateKey: 'YOUR_PRIVATE_KEY',
+        ),
+      );
+      
+      if (mounted && response.status == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Message delivered successfully!'), backgroundColor: Colors.green),
+        );
+        _formKey.currentState!.reset();
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delivery failed: $error'), backgroundColor: Colors.redAccent),
+        );
+      }
+    } finally {
+      _isSending.value = false;
+    }
+  }
+
+  Future<void> _launchExternalUrl(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
   void dispose() {
-    nameController.dispose();
-    emailController.dispose();
-    subjectController.dispose();
-    messageController.dispose();
-    _isSendingNotifier.dispose();
-    _isSubmitHovered.dispose();
-    _hoverController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _subjectController.dispose();
+    _messageController.dispose();
+    _isButtonHovered.dispose();
+    _isCardHovered.dispose();
+    _isSending.dispose();
+    _physicsController.dispose();
     super.dispose();
-  }
-
-  void _updateCardPerspective(PointerHoverEvent event, RenderBox box) {
-    if (widget.isMobile) {
-      return;
-    }
-
-    final size = box.size;
-    final localPosition = box.globalToLocal(event.position);
-    
-    final percentX = (localPosition.dx / size.width) - 0.5;
-    final percentY = (localPosition.dy / size.height) - 0.5;
-
-    setState(() {
-      _rotateX = -percentY * 0.15;
-      _rotateY = percentX * 0.15;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool useMobileLayout = widget.isMobile;
+    final double width = MediaQuery.of(context).size.width;
+    final bool isMobile = width < 950;
 
     return Container(
       key: widget.sectionKey,
       width: double.infinity,
-      color: const Color(0xFF0B0C10), 
+      color: const Color(0xFF0D0E12),
       padding: EdgeInsets.symmetric(
-        horizontal: useMobileLayout ? 24 : 80,
-        vertical: useMobileLayout ? 60 : 100,
+        horizontal: isMobile ? 24 : 140,
+        vertical: isMobile ? 80 : 120,
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1100),
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Flex(
-                direction: useMobileLayout ? Axis.vertical : Axis.horizontal,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // LEFT COLUMN - Contact Details
-                  Expanded(
-                    flex: useMobileLayout ? 0 : 1,
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: useMobileLayout ? 0 : 60, 
-                        bottom: useMobileLayout ? 48 : 0,
+      child: Flex(
+        direction: isMobile ? Axis.vertical : Axis.horizontal,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // LEFT SIDE COLUMN: Personal Info Details Panel
+          Expanded(
+            flex: isMobile ? 0 : 5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Get In Touch',
+                  style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Let's work together!",
+                  style: TextStyle(
+                    color: Color(0xFF45F3FF),
+                    fontSize: 36,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.0,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "I'm currently looking for new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!",
+                  style: TextStyle(color: Color(0xFF9EAFBC), fontSize: 15, height: 1.6),
+                ),
+                const SizedBox(height: 48),
+                _buildInfoTile(
+                  icon: Icons.mail_outline_rounded,
+                  title: 'Email',
+                  data: 'sakshibonage22@gmail.com',
+                  onTap: () => _launchExternalUrl('mailto:kudhar892@gmail.com'),
+                ),
+                const SizedBox(height: 28),
+                _buildInfoTile(
+                  icon: Icons.link_rounded,
+                  title: 'LinkedIn',
+                  data: 'https://www.linkedin.com/in/sakshi-bonage-6102a8347/',
+                  onTap: () => _launchExternalUrl('https://linkedin.com'),
+                ),
+                const SizedBox(height: 28),
+                _buildInfoTile(
+                  icon: Icons.code_rounded,
+                  title: 'GitHub',
+                  data: 'https://github.com/sakshi-bonage',
+                  onTap: () => _launchExternalUrl('https://://github.com'),
+                ),
+              ],
+            ),
+          ),
+          
+          if (!isMobile) const SizedBox(width: 80),
+          if (isMobile) const SizedBox(height: 56),
+
+          // RIGHT SIDE COLUMN: Interactive 3D Physics Input Form Panel
+          Expanded(
+            flex: isMobile ? 0 : 5,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final cardSize = Size(constraints.maxWidth, constraints.maxHeight);
+
+                return MouseRegion(
+                  onEnter: (_) => _isCardHovered.value = true,
+                  onHover: (event) => _updateGestureOffset(event, cardSize),
+                  onExit: (_) {
+                    _isCardHovered.value = false;
+                    _resetGestureOffset();
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.all(isMobile ? 24 : 40),
+                    transform: Matrix4.identity()
+                      ..setEntry(3, 2, 0.001) // Deep visual 3D perspective projection factor
+                      ..rotateX(_lerpX)
+                      ..rotateY(_lerpY),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF13151A),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: _isCardHovered.value 
+                            ? const Color(0xFF45F3FF).withValues(alpha: 0.2) 
+                            : Colors.white.withValues(alpha: 0.02),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _isCardHovered.value 
+                              ? const Color(0xFF45F3FF).withValues(alpha: 0.04) 
+                              : Colors.black38,
+                          blurRadius: _isCardHovered.value ? 40 : 25,
+                          offset: Offset(0, _isCardHovered.value ? 16 : 10),
+                        ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            "Get In Touch",
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
+                            'Send Message',
+                            style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
                           ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            "Let's work together!",
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF45F3FF), 
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            "I'm currently looking for new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!",
-                            style: TextStyle(
-                              color: Color(0xFF9CA3AF),
-                              fontSize: 15,
-                              height: 1.5,
-                        ),
-                      ),
-                          const SizedBox(height: 48),
-                          
-                          _buildInfoItem(
-                            icon: Icons.mail_outline_rounded,
-                            label: "Email",
-                            value: "sakshibonage22@gmail.com",
-                            delay: 100,
-                          ),
-                          const SizedBox(height: 24),
-                          _buildInfoItem(
-                            icon: Icons.link_rounded,
-                            label: "LinkedIn",
-                            value: "://linkedin.com",
-                            delay: 200,
-                          ),
-                          const SizedBox(height: 24),
-                          _buildInfoItem(
-                            icon: Icons.code_rounded,
-                            label: "GitHub",
-                            value: "://github.com",
-                            delay: 300,
-                          ),
-                        ],
+                          const SizedBox(height: 28),
+                          _buildFormLabel('Name'),
+                          const SizedBox(height: 8),
+                          _buildTextField(_nameController, 'Your Name', false),
+                          const SizedBox(height: 20),
+                          _buildFormLabel('Email'),
+                          const SizedBox(height: 8),
+                          _buildTextField(_emailController, 'your.email@example.com', false),
+                          const SizedBox(height: 20),
+                          _buildFormLabel('Subject (Optional)'),
+                          const SizedBox(height: 8),
+                          _buildTextField(_subjectController, 'Message subject', false),
+                    const SizedBox(height: 20),
+                    _buildFormLabel('Message'),
+                    const SizedBox(height: 8),
+                    _buildTextField(_messageController, 'Write your message here...', true),
+                    const SizedBox(height: 32),
+                    
+                    // Submission Button Frame
+                    MouseRegion(
+                      onEnter: (_) => _isButtonHovered.value = true,
+                      onExit: (_) => _isButtonHovered.value = false,
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: _isButtonHovered,
+                        builder: (context, hovered, child) {
+                          return ValueListenableBuilder<bool>(
+                            valueListenable: _isSending,
+                            builder: (context, sending, child) {
+                              return SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: ElevatedButton(
+                                  onPressed: sending ? null : _sendEmailViaEmailJS,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: hovered || sending
+                                        ? const Color(0xFF00B4D8)
+                                        : const Color(0xFF45F3FF),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: sending
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Text(
+                                          'Send Message',
+                                          style: TextStyle(
+                                            color: hovered || sending 
+                                                ? Colors.white 
+                                                : Colors.black,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
-                  ),
-
-                  // RIGHT COLUMN - 3D Form Card
-                  Expanded(
-                    flex: useMobileLayout ? 0 : 1,
-                    child: MouseRegion(
-                      onEnter: (_) => setState(() => _isCardHovered = true),
-                      onExit: (_) => setState(() {
-                        _isCardHovered = false;
-                        _rotateX = 0.0;
-                        _rotateY = 0.0;
-                      }),
-                      onHover: (event) {
-                        final box = context.findRenderObject() as RenderBox?;
-                        if (box != null) _updateCardPerspective(event, box);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        curve: Curves.easeOutCubic,
-                        transformAlignment: Alignment.center,
-                        transform: Matrix4.identity()
-                          ..setEntry(3, 2, 0.001)
-                          ..rotateX(_rotateX)
-                        ..rotateY(_rotateY),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF141D26),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: _isCardHovered
-                                  ? const Color(0xFF45F3FF).withValues(alpha: 0.3)
-                                  : const Color(0xFF1F2937),
-                              width: 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: _isCardHovered
-                                    ? const Color(0xFF45F3FF).withValues(alpha: 0.08)
-                                    : Colors.black.withValues(alpha: 0.2),
-                                blurRadius: _isCardHovered ? 30 : 15,
-                                offset: _isCardHovered
-                                    ? const Offset(0, 10)
-                                    : const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Send Message",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              _buildTextField(
-                                label: "Name",
-                                hint: "Your Name",
-                                controller: nameController,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildTextField(
-                                label: "Email",
-                                hint: "your.email@example.com",
-                                controller: emailController,
-                                keyboardType: TextInputType.emailAddress,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildTextField(
-                                label: "Subject (Optional)",
-                                hint: "Message subject",
-                                controller: subjectController,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildTextField(
-                                label: "Message",
-                                hint: "Write your message here...",
-                                controller: messageController,
-                                maxLines: 5,
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Submit Button Module
-                              MouseRegion(
-                                onEnter: (_) => _isSubmitHovered.value = true,
-                                onExit: (event) => _isSubmitHovered.value = false,
-                                child: ValueListenableBuilder(
-                                  valueListenable: _isSendingNotifier,
-                                  builder: (context, isSending, child) {
-                                    return ValueListenableBuilder(
-                                      valueListenable: _isSubmitHovered,
-                                      builder: (context, isHovered, child) {
-                                        return AnimatedContainer(
-                                          duration: const Duration(milliseconds: 200),
-                                          width: double.infinity,
-                                          height: 48,
-                                          decoration: BoxDecoration(
-                                            color: isSending
-                                                ? const Color(0xFF1B1E26)
-                                                : isHovered
-                                                    ? const Color(0xFF3CD2DC)
-                                                    : const Color(0xFF45F3FF),
-                                            borderRadius: BorderRadius.circular(8),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: const Color(0xFF45F3FF)
-                                                    .withValues(alpha: isHovered ? 0.3 : 0.1),
-                                                blurRadius: 12,
-                                                offset: const Offset(0, 4),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ElevatedButton(
-                                            onPressed: isSending ? null : sendEmail,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.transparent,
-                                              shadowColor: Colors.transparent,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                            ),
-                                            child: child!,
-                                          ),
-                                        );
-                                      },
-                                      child: ValueListenableBuilder(
-                                        valueListenable: _isSendingNotifier,
-                                        builder: (context, sending, _) {
-                                          if (sending) {
-                                            return const Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                SizedBox(
-                                                  width: 16,
-                                                  height: 16,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2.5,
-                                                    color: Color(0xFF0B0C10),
-                                                  ),
-                                                ),
-                                                SizedBox(width: 12),
-                                                Text(
-                                                  "SENDING MESSAGE...",
-                                                  style: TextStyle(
-                                                    color: Color(0xFF0B0C10),
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ],
-                                            );
-                                          }
-                                          return const Text(
-                                            "Send Message",
-                                            style: TextStyle(
-                                              color: Color(0xFF0B0C10),
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
+          ),
+          ],
+        ),
     );
   }
 
-  Widget _buildInfoItem({
+  Widget _buildInfoTile({
     required IconData icon,
-    required String label,
-    required String value,
-    required int delay,
+    required String title,
+    required String data,
+    required VoidCallback onTap,
   }) {
-    final ValueNotifier<bool> isLinkHovered = ValueNotifier(false);
-    return TweenAnimationBuilder(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 400 + delay),
-      curve: Curves.easeOut,
-      builder: (context, animValue, child) {
-        return Transform.translate(
-          offset: Offset((1.0 - animValue) * -20, 0),
-          child: Opacity(
-            opacity: animValue,
-            child: child,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF141D26),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
           ),
-        );
-      },
-      child: GestureDetector(
-        onTap: () async {
-          final Uri url;
-          if (label.toLowerCase() == "email") {
-            url = Uri(scheme: 'mailto', path: value);
-          } else {
-            final String cleanUrl = value.startsWith('http') ? value : 'https://$value';
-            url = Uri.parse(cleanUrl);
-          }
-          try {
-            await launchUrl(url, mode: LaunchMode.externalApplication);
-          } catch (e) {
-            if (context.mounted) {
-              _showCustomSnackBar("Could not resolve action for: $value", isError: true);
-            }
-          }
-        },
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (event) => isLinkHovered.value = true,
-          onExit: (event) => isLinkHovered.value = false,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Icon(icon, size: 20, color: const Color(0xFF45F3FF)),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF141D26),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF1F2937),
-                    width: 1,
-                  ),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
-                child: Icon(icon, color: const Color(0xFF45F3FF), size: 18),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        color: Color(0xFF9CA3AF),
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    ValueListenableBuilder(
-                      valueListenable: isLinkHovered,
-                      builder: (context, hovered, _) {
-                        return AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 200),
-                          style: TextStyle(
-                            color: hovered ? const Color(0xFF45F3FF) : Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          child: Text(value),
-                        );
-                      },
-                    ),
-                  ],
+              const SizedBox(height: 4),
+              RichText(
+                text: TextSpan(
+                  text: data,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                  recognizer: TapGestureRecognizer()..onTap = onTap,
                 ),
               ),
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildFormLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        color: Colors.white70,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
       ),
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF9CA3AF),
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
+  Widget _buildTextField(TextEditingController controller, String hint, bool isMultiline) {
+    return TextFormField(
+      controller: controller,
+      maxLines: isMultiline ? 5 : 1,
+      style: const TextStyle(color: Colors.white, fontSize: 14),
+      validator: (val) {
+        if (!isMultiline && hint.contains('@') && (val == null || !val.contains('@') || !val.contains('.'))) {
+          return 'Please provide a valid entry format.';
+        }
+        if (!hint.contains('Optional') && (val == null || val.trim().isEmpty)) {
+          return 'Field parameter configuration required.';
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white24, fontSize: 14),
+        filled: true,
+        fillColor: const Color(0xFF0B0C10),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.02)),
         ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
-          cursorColor: const Color(0xFF45F3FF),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: Color(0xFF4A5568), fontSize: 14),
-            filled: true,
-            fillColor: const Color(0xFF1C2733),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF2D3748), width: 1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF45F3FF), width: 1),
-            ),
-          ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF45F3FF), width: 1),
         ),
-      ],
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+      ),
     );
   }
 }

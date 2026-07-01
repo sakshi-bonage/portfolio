@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-Widget projectsSection(bool isMobile, {required GlobalKey key}) {
-  return _AnimatedProjectsSection(isMobile: isMobile, sectionKey: key);
-}
-
-class _AnimatedProjectsSection extends StatefulWidget {
+class ProjectsSection extends StatefulWidget {
   final bool isMobile;
   final GlobalKey sectionKey;
 
-  const _AnimatedProjectsSection({
+  const ProjectsSection({
     required this.isMobile,
     required this.sectionKey,
+    super.key,
   });
 
   @override
-  State<_AnimatedProjectsSection> createState() =>
-      _AnimatedProjectsSectionState();
+  State<ProjectsSection> createState() => _ProjectsSectionState();
 }
 
-class _AnimatedProjectsSectionState extends State<_AnimatedProjectsSection> {
+class _ProjectsSectionState extends State<ProjectsSection> {
   final ValueNotifier<String> _selectedTab = ValueNotifier('ALL');
 
   final List<Map<String, dynamic>> _projects = [
@@ -39,6 +35,20 @@ class _AnimatedProjectsSectionState extends State<_AnimatedProjectsSection> {
           'A comprehensive digital storefront designed for scale. Featuring real-time inventory, secure checkout, and a designer-led UI system that prioritizes user conversion and brand loyalty.',
       'imagePath': 'assets/project1.jpg',
       'tech': ['Flutter', 'REST API', 'Dart', 'State Management'],
+      'url': 'https://github.com',
+    },
+    {
+      'title': 'Sakshi Professional Portfolio Website',
+      'category': 'WEB',
+      'description':
+          'A high-performance interactive web application built to exhibit architecture concepts, timeline metrics, and layout animations. Highly customized for screen responsiveness.',
+      'imagePath': 'assets/project3.jpg',
+      'tech': [
+        'Flutter Web',
+        'Dart',
+        'Matrix Animations',
+        'Clean Architecture',
+      ],
       'url': 'https://github.com',
     },
   ];
@@ -65,7 +75,7 @@ class _AnimatedProjectsSectionState extends State<_AnimatedProjectsSection> {
     return Container(
       key: widget.sectionKey,
       width: double.infinity,
-      color: const Color(0xFF0D0E12), // Cinematic deep background space
+      color: const Color(0xFF0D0E12),
       padding: EdgeInsets.symmetric(
         horizontal: widget.isMobile ? 24 : 140,
         vertical: widget.isMobile ? 60 : 100,
@@ -287,7 +297,6 @@ class _InteractiveProjectCardState extends State<_InteractiveProjectCard> {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 400),
                     curve: Curves.easeOutCubic,
-                    // FIXED LINE: Symmetrical 3D matrix coordinate vector mapping
                     transform: hovered
                         ? Matrix4.diagonal3Values(1.03, 1.03, 1.03)
                         : Matrix4.identity(),
@@ -403,7 +412,7 @@ class _InteractiveProjectCardState extends State<_InteractiveProjectCard> {
                                 duration: const Duration(milliseconds: 200),
                                 transform: hovered
                                     ? Matrix4.translationValues(6, 0, 0)
-                                    : Matrix4.translationValues(0, 0, 0),
+                                    : Matrix4.identity(),
                                 child: Icon(
                                   Icons.arrow_forward_rounded,
                                   color: hovered

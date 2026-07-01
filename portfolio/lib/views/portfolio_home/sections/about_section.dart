@@ -134,12 +134,12 @@ class AboutSection extends StatelessWidget {
         color: const Color(0xFF13151A),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -217,7 +217,7 @@ class AboutSection extends StatelessWidget {
               color: isLatest ? Colors.cyanAccent : Colors.white24,
               boxShadow: isLatest ? [
                 BoxShadow(
-                  color: Colors.cyanAccent.withOpacity(0.4),
+                  color: Colors.cyanAccent.withValues(alpha: 0.4),
                   blurRadius: 8,
                   spreadRadius: 2,
                 )

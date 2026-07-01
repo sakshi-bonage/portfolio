@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
 
+class HeroSection extends StatelessWidget {
+  final GlobalKey sectionKey;
+
+  const HeroSection({required this.sectionKey, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final double width = MediaQuery.of(context).size.width;
+    final bool isMobile = width < 768;
+
+    return Container(
+      key: sectionKey,
+      child: _PremiumVolumetricHero(isMobile: isMobile),
+    );
+  }
+}
+
 Widget buildHeroSection(bool isMobile) {
-  return _PremiumVolumetricHero(isMobile: isMobile);
+  return HeroSection(sectionKey: GlobalKey());
 }
 
 class _PremiumVolumetricHero extends StatefulWidget {
@@ -13,26 +30,64 @@ class _PremiumVolumetricHero extends StatefulWidget {
 }
 
 class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
-    with SingleTickerProviderStateMixin {
-  // HIGH-PERFORMANCE WORKFLOW: Bypasses heavy global redrawing loops completely
+    with TickerProviderStateMixin {
   final ValueNotifier<Matrix4> _tiltMatrix = ValueNotifier(Matrix4.identity());
   final ValueNotifier<Offset> _mousePos = ValueNotifier(Offset.zero);
   final ValueNotifier<bool> _isHovered = ValueNotifier(false);
   final ValueNotifier<bool> _isTextHovered = ValueNotifier(false);
   final ValueNotifier<bool> _isCtaHovered = ValueNotifier(false);
 
-  // Staggered Entrance Animation Engine Controller Configuration
   late AnimationController _entranceController;
+  late AnimationController _textTickerController;
+
+  double _targetTiltX = 0.0;
+  double _targetTiltY = 0.0;
+  double _currentTiltX = 0.0;
+  double _currentTiltY = 0.0;
+  late AnimationController _tickerPhysicsLoop;
+
+  final String _targetHeadlineName = "Hi, I am\nSakshi Rajebhau\nBonage";
 
   @override
   void initState() {
     super.initState();
+
     _entranceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
+    )..forward();
+
+    _textTickerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
     );
-    // Fires off the staggered entry timeline immediately on page construction
-    _entranceController.forward();
+
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _textTickerController.forward();
+    });
+
+    _tickerPhysicsLoop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 16),
+    )..addListener(_interpolateParallaxSprings);
+  }
+
+  void _interpolateParallaxSprings() {
+    if (!mounted) return;
+
+    _currentTiltX = _currentTiltX + (_targetTiltX - _currentTiltX) * 0.15;
+    _currentTiltY = _currentTiltY + (_targetTiltY - _currentTiltY) * 0.15;
+
+    _tiltMatrix.value = Matrix4.identity()
+      ..setEntry(3, 2, 0.0012)
+      ..rotateX(_currentTiltX)
+      ..rotateY(_currentTiltY);
+
+    if (_isHovered.value &&
+        ((_targetTiltX - _currentTiltX).abs() > 0.001 ||
+            (_targetTiltY - _currentTiltY).abs() > 0.001)) {
+      _tickerPhysicsLoop.forward(from: 0.0);
+    }
   }
 
   @override
@@ -43,59 +98,50 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
     _isTextHovered.dispose();
     _isCtaHovered.dispose();
     _entranceController.dispose();
+    _textTickerController.dispose();
+    _tickerPhysicsLoop.dispose();
     super.dispose();
   }
 
-  void _handleMouseMovement(
-    PointerEvent event,
-    Size boundary,
-    double paddingHorizontal,
-  ) {
-    if (widget.isMobile) {
-      return;
-    }
+  void _handleMouseMovement(PointerEvent event, Size boundary, double paddingHorizontal) {
+    if (widget.isMobile) return;
 
     _mousePos.value = Offset(
-      event.localPosition.dx - 200 - paddingHorizontal,
-      event.localPosition.dy - 200 - 140,
+      event.localPosition.dx - 200,
+      event.localPosition.dy - 200,
     );
 
     final midX = boundary.width / 2;
     final midY = boundary.height / 2;
-    final tiltY = ((event.localPosition.dx - midX) / midX) * 0.12;
-    final tiltX = ((event.localPosition.dy - midY) / midY) * -0.12;
 
-    _tiltMatrix.value = Matrix4.identity()
-      ..setEntry(
-        3,
-        2,
-        0.001,
-      ) // 3D Perspective Projection factor depth mapping parameter
-      ..rotateX(tiltX)
-      ..rotateY(tiltY);
+    _targetTiltY = ((event.localPosition.dx - midX) / midX) * 0.15;
+    _targetTiltX = ((event.localPosition.dy - midY) / midY) * -0.15;
+
+    if (!_tickerPhysicsLoop.isAnimating) {
+      _tickerPhysicsLoop.forward(from: 0.0);
+    }
   }
 
   void _resetMouseEffects() {
     _isHovered.value = false;
-    _tiltMatrix.value = Matrix4.identity();
+    _targetTiltX = 0.0;
+    _targetTiltY = 0.0;
+    if (!_tickerPhysicsLoop.isAnimating) {
+      _tickerPhysicsLoop.forward(from: 0.0);
+    }
   }
 
-  // Refactored Entrance Engine utilizing fluid mathematical interval overlapping curves
-  Widget _buildStaggeredEntrance({
-    required double startInterval,
-    required Widget child,
-  }) {
-    final Animation<double> sequenceAnimation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(
-          CurvedAnimation(
-            parent: _entranceController,
-            curve: Interval(
-              startInterval,
-              (startInterval + 0.45).clamp(0.0, 1.0),
-              curve: Curves.easeOutCubic,
-            ),
-          ),
-        );
+  Widget _buildStaggeredEntrance({required double startInterval, required Widget child}) {
+    final Animation<double> sequenceAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: Interval(
+          startInterval,
+          (startInterval + 0.45).clamp(0.0, 1.0),
+          curve: Curves.easeOutCubic,
+        ),
+      ),
+    );
 
     return AnimatedBuilder(
       animation: sequenceAnimation,
@@ -109,11 +155,7 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
     );
   }
 
-  Widget _buildResponsiveFlexChild({
-    required bool isStacked,
-    required int flex,
-    required Widget child,
-  }) {
+  Widget _buildResponsiveFlexChild({required bool isStacked, required int flex, required Widget child}) {
     return isStacked ? child : Flexible(flex: flex, child: child);
   }
 
@@ -123,16 +165,11 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
     final bool isTablet = width < 1100;
     final bool isStacked = widget.isMobile || isTablet;
     final size = MediaQuery.of(context).size;
-    final double layoutHorizontalPadding = width > 1400
-        ? 140
-        : width > 1000
-        ? 80
-        : 24;
+    final double layoutHorizontalPadding = width > 1400 ? 140 : width > 1000 ? 80 : 24;
 
     return MouseRegion(
       onEnter: (_) => _isHovered.value = true,
-      onHover: (event) =>
-          _handleMouseMovement(event, size, layoutHorizontalPadding),
+      onHover: (event) => _handleMouseMovement(event, size, layoutHorizontalPadding),
       onExit: (_) => _resetMouseEffects(),
       child: Container(
         width: double.infinity,
@@ -140,13 +177,10 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
           horizontal: layoutHorizontalPadding,
           vertical: widget.isMobile ? 60 : 120,
         ),
-        color: const Color(
-          0xFF0B0C10,
-        ), // Matched deep portfolio space dark background
+        color: const Color(0xFF0B0C10),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Ambient Spotlight Tracking Frame (Hidden completely on mobile)
             if (!widget.isMobile)
               ValueListenableBuilder<bool>(
                 valueListenable: _isHovered,
@@ -181,13 +215,12 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                 },
               ),
 
-            // Main Responsive Multi-Column Structural Grid
             Flex(
               direction: isStacked ? Axis.vertical : Axis.horizontal,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // LEFT SIDE COLUMN: Interactive Typography Copywriting Engine
+                // LEFT COLUMN
                 _buildResponsiveFlexChild(
                   isStacked: isStacked,
                   flex: 5,
@@ -195,24 +228,14 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Subtitle Status Banner Badge
                       _buildStaggeredEntrance(
                         startInterval: 0.0,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF45F3FF,
-                            ).withValues(alpha: 0.06),
+                            color: const Color(0xFF45F3FF).withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(
-                                0xFF45F3FF,
-                              ).withValues(alpha: 0.15),
-                            ),
+                            border: Border.all(color: const Color(0xFF45F3FF).withValues(alpha: 0.15)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -241,14 +264,13 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                       ),
                       const SizedBox(height: 24),
 
-                      // Premium Animated Main Identity Headline
                       _buildStaggeredEntrance(
                         startInterval: 0.15,
                         child: MouseRegion(
                           onEnter: (_) => _isTextHovered.value = true,
                           onExit: (_) => _isTextHovered.value = false,
                           cursor: SystemMouseCursors.click,
-                          child: ValueListenableBuilder<bool>(
+                          child: ValueListenableBuilder(
                             valueListenable: _isTextHovered,
                             builder: (context, textHovered, child) {
                               return AnimatedDefaultTextStyle(
@@ -264,17 +286,24 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   shadows: textHovered
                                       ? [
                                           Shadow(
-                                            color: const Color(
-                                              0xFF45F3FF,
-                                            ).withValues(alpha: 0.4),
+                                            color: const Color(0xFF45F3FF)
+                                                .withValues(alpha: 0.4),
                                             blurRadius: 20,
                                           ),
                                         ]
                                       : [],
                                   letterSpacing: -1.5,
                                 ),
-                                child: const Text(
-                                  'Hi, I am\nSakshi Rajebhau\nBonage',
+                                child: AnimatedBuilder(
+                                  animation: _textTickerController,
+                                  builder: (context, _) {
+                                    int count = (_textTickerController.value *
+                                            _targetHeadlineName.length)
+                                        .floor();
+                                    String currentString =
+                                        _targetHeadlineName.substring(0, count);
+                                    return Text(currentString);
+                                  },
                                 ),
                               );
                             },
@@ -283,7 +312,6 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                       ),
                       const SizedBox(height: 16),
 
-                      // Gradient Subtext Role Descriptor
                       _buildStaggeredEntrance(
                         startInterval: 0.3,
                         child: ShaderMask(
@@ -303,7 +331,6 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                       ),
                       const SizedBox(height: 20),
 
-                      // Core Professional Pitch Paragraph
                       _buildStaggeredEntrance(
                         startInterval: 0.45,
                         child: const Text(
@@ -317,7 +344,6 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                       ),
                       const SizedBox(height: 40),
 
-                      // Magnetic Download Resume Button Module
                       _buildStaggeredEntrance(
                         startInterval: 0.6,
                         child: MouseRegion(
@@ -336,17 +362,14 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   boxShadow: [
                                     BoxShadow(
                                       color: const Color(0xFF45F3FF).withValues(
-                                        alpha: ctaHovered ? 0.25 : 0.0,
-                                      ),
+                                          alpha: ctaHovered ? 0.25 : 0.0),
                                       blurRadius: 15,
                                       offset: const Offset(0, 6),
                                     ),
                                   ],
                                 ),
                                 child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    // Connected link triggers will integrate here
-                                  },
+                                  onPressed: () {},
                                   icon: Icon(
                                     Icons.arrow_downward_rounded,
                                     size: 18,
@@ -357,10 +380,9 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   label: const Text(
                                     'DOWNLOAD RESUME',
                                     style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.0,
-                                      fontSize: 13,
-                                    ),
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.0,
+                                        fontSize: 13),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: ctaHovered
@@ -370,18 +392,16 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                         ? Colors.white
                                         : const Color(0xFF0B0C10),
                                     side: BorderSide(
-                                      color: ctaHovered
-                                          ? const Color(0xFF45F3FF)
-                                          : Colors.transparent,
-                                      width: 1.5,
-                                    ),
+                                        color: ctaHovered
+                                            ? const Color(0xFF45F3FF)
+                                            : Colors.transparent,
+                                        width: 1.5),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: widget.isMobile ? 24 : 32,
                                       vertical: widget.isMobile ? 18 : 22,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                        borderRadius: BorderRadius.circular(12)),
                                     elevation: 0,
                                   ),
                                 ),
@@ -397,7 +417,7 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                 if (!widget.isMobile && !isStacked) const SizedBox(width: 48),
                 if (isStacked) const SizedBox(height: 48),
 
-                // RIGHT SIDE COLUMN: Interactive 3D Photo Parallax Component Container
+                // RIGHT COLUMN
                 _buildResponsiveFlexChild(
                   isStacked: isStacked,
                   flex: 4,
@@ -417,7 +437,6 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                         clipBehavior: Clip.none,
                         alignment: Alignment.center,
                         children: [
-                          // Background Decorative Parallax Border Line Frame
                           ValueListenableBuilder(
                             valueListenable: _isHovered,
                             builder: (context, hovered, _) {
@@ -432,9 +451,7 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
                                     color: hovered
-                                        ? const Color(
-                                            0xFF45F3FF,
-                                          ).withValues(alpha: 0.5)
+                                        ? const Color(0xFF45F3FF).withValues(alpha: 0.5)
                                         : const Color(0xFF1F2937),
                                     width: 2,
                                   ),
@@ -443,7 +460,6 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                             },
                           ),
 
-                          // Front High-Performance Image Container Layout Card Wrapper
                           ValueListenableBuilder(
                             valueListenable: _isHovered,
                             builder: (context, hovered, childWidget) {
@@ -452,24 +468,18 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                 width: widget.isMobile ? 260 : 320,
                                 height: widget.isMobile ? 320 : 400,
                                 decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF141D26,
-                                  ), // Elevated surface container depth card matching portfolio theme
+                                  color: const Color(0xFF141D26),
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
                                     color: hovered
-                                        ? const Color(
-                                            0xFF45F3FF,
-                                          ).withValues(alpha: 0.2)
+                                        ? const Color(0xFF45F3FF).withValues(alpha: 0.2)
                                         : const Color(0xFF1F2937),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: hovered
-                                          ? const Color(
-                                              0xFF45F3FF,
-                                            ).withValues(alpha: 0.15)
+                                          ? const Color(0xFF45F3FF).withValues(alpha: 0.15)
                                           : Colors.black45,
                                       blurRadius: hovered ? 40 : 20,
                                       offset: Offset(0, hovered ? 16 : 8),
