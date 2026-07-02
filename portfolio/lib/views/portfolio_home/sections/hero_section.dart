@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 class HeroSection extends StatelessWidget {
   final GlobalKey sectionKey;
 
@@ -102,7 +104,11 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
     super.dispose();
   }
 
-  void _handleMouseMovement(PointerEvent event, Size boundary, double paddingHorizontal) {
+  void _handleMouseMovement(
+    PointerEvent event,
+    Size boundary,
+    double paddingHorizontal,
+  ) {
     if (widget.isMobile) return;
 
     _mousePos.value = Offset(
@@ -130,17 +136,21 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
     }
   }
 
-  Widget _buildStaggeredEntrance({required double startInterval, required Widget child}) {
-    final Animation<double> sequenceAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: Interval(
-          startInterval,
-          (startInterval + 0.45).clamp(0.0, 1.0),
-          curve: Curves.easeOutCubic,
-        ),
-      ),
-    );
+  Widget _buildStaggeredEntrance({
+    required double startInterval,
+    required Widget child,
+  }) {
+    final Animation<double> sequenceAnimation =
+        Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: Interval(
+              startInterval,
+              (startInterval + 0.45).clamp(0.0, 1.0),
+              curve: Curves.easeOutCubic,
+            ),
+          ),
+        );
 
     return AnimatedBuilder(
       animation: sequenceAnimation,
@@ -154,7 +164,11 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
     );
   }
 
-  Widget _buildResponsiveFlexChild({required bool isStacked, required int flex, required Widget child}) {
+  Widget _buildResponsiveFlexChild({
+    required bool isStacked,
+    required int flex,
+    required Widget child,
+  }) {
     return isStacked ? child : Flexible(flex: flex, child: child);
   }
 
@@ -164,11 +178,16 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
     final bool isTablet = width < 1100;
     final bool isStacked = widget.isMobile || isTablet;
     final size = MediaQuery.of(context).size;
-    final double layoutHorizontalPadding = width > 1400 ? 140 : width > 1000 ? 80 : 24;
+    final double layoutHorizontalPadding = width > 1400
+        ? 140
+        : width > 1000
+        ? 80
+        : 24;
 
     return MouseRegion(
       onEnter: (_) => _isHovered.value = true,
-      onHover: (event) => _handleMouseMovement(event, size, layoutHorizontalPadding),
+      onHover: (event) =>
+          _handleMouseMovement(event, size, layoutHorizontalPadding),
       onExit: (_) => _resetMouseEffects(),
       child: Container(
         width: double.infinity,
@@ -230,11 +249,20 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                       _buildStaggeredEntrance(
                         startInterval: 0.0,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF45F3FF).withValues(alpha: 0.06),
+                            color: const Color(
+                              0xFF45F3FF,
+                            ).withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF45F3FF).withValues(alpha: 0.15)),
+                            border: Border.all(
+                              color: const Color(
+                                0xFF45F3FF,
+                              ).withValues(alpha: 0.15),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -285,8 +313,9 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   shadows: textHovered
                                       ? [
                                           Shadow(
-                                            color: const Color(0xFF45F3FF)
-                                                .withValues(alpha: 0.4),
+                                            color: const Color(
+                                              0xFF45F3FF,
+                                            ).withValues(alpha: 0.4),
                                             blurRadius: 20,
                                           ),
                                         ]
@@ -296,11 +325,12 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                 child: AnimatedBuilder(
                                   animation: _textTickerController,
                                   builder: (context, _) {
-                                    int count = (_textTickerController.value *
-                                            _targetHeadlineName.length)
-                                        .floor();
-                                    String currentString =
-                                        _targetHeadlineName.substring(0, count);
+                                    int count =
+                                        (_textTickerController.value *
+                                                _targetHeadlineName.length)
+                                            .floor();
+                                    String currentString = _targetHeadlineName
+                                        .substring(0, count);
                                     return Text(currentString);
                                   },
                                 ),
@@ -361,14 +391,23 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   boxShadow: [
                                     BoxShadow(
                                       color: const Color(0xFF45F3FF).withValues(
-                                          alpha: ctaHovered ? 0.25 : 0.0),
+                                        alpha: ctaHovered ? 0.25 : 0.0,
+                                      ),
                                       blurRadius: 15,
                                       offset: const Offset(0, 6),
                                     ),
                                   ],
                                 ),
                                 child: ElevatedButton.icon(
-                                  onPressed: () {},
+                                  onPressed: () async {
+                                    const url =
+                                        'assets/resume/sakshi_resume.pdf';
+
+                                    await launchUrl(
+                                      Uri.parse(url),
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  },
                                   icon: Icon(
                                     Icons.arrow_downward_rounded,
                                     size: 18,
@@ -379,9 +418,10 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   label: const Text(
                                     'DOWNLOAD RESUME',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.0,
-                                        fontSize: 13),
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.0,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: ctaHovered
@@ -391,16 +431,18 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                         ? Colors.white
                                         : const Color(0xFF0B0C10),
                                     side: BorderSide(
-                                        color: ctaHovered
-                                            ? const Color(0xFF45F3FF)
-                                            : Colors.transparent,
-                                        width: 1.5),
+                                      color: ctaHovered
+                                          ? const Color(0xFF45F3FF)
+                                          : Colors.transparent,
+                                      width: 1.5,
+                                    ),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: widget.isMobile ? 24 : 32,
                                       vertical: widget.isMobile ? 18 : 22,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     elevation: 0,
                                   ),
                                 ),
@@ -450,7 +492,9 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
                                     color: hovered
-                                        ? const Color(0xFF45F3FF).withValues(alpha: 0.5)
+                                        ? const Color(
+                                            0xFF45F3FF,
+                                          ).withValues(alpha: 0.5)
                                         : const Color(0xFF1F2937),
                                     width: 2,
                                   ),
@@ -471,14 +515,18 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
                                     color: hovered
-                                        ? const Color(0xFF45F3FF).withValues(alpha: 0.2)
+                                        ? const Color(
+                                            0xFF45F3FF,
+                                          ).withValues(alpha: 0.2)
                                         : const Color(0xFF1F2937),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: hovered
-                                          ? const Color(0xFF45F3FF).withValues(alpha: 0.15)
+                                          ? const Color(
+                                              0xFF45F3FF,
+                                            ).withValues(alpha: 0.15)
                                           : Colors.black45,
                                       blurRadius: hovered ? 40 : 20,
                                       offset: Offset(0, hovered ? 16 : 8),
