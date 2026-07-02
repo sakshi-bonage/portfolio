@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:web/web.dart' as web;
+import 'dart:js_interop';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 
 class HeroSection extends StatelessWidget {
   final GlobalKey sectionKey;
@@ -133,6 +139,41 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
     _targetTiltY = 0.0;
     if (!_tickerPhysicsLoop.isAnimating) {
       _tickerPhysicsLoop.forward(from: 0.0);
+    }
+  }
+
+  Future<void> downloadResume() async {
+    try {
+      if (kIsWeb) {
+        // Load the PDF bytes from Flutter's asset bundle (works in dev & production).
+        // Flutter Web serves assets at 'assets/<path>' relative to the app base href.
+        final data = await rootBundle.load('assets/resume/sakshi_resume.pdf');
+        final bytes = data.buffer.asUint8List();
+
+        // Create a Blob URL and trigger a download via an invisible <a download> click.
+        // This never navigates away, never reloads the app, and works on all static hosts.
+        final blob = web.Blob(
+          [bytes.toJS].toJS,
+          web.BlobPropertyBag(type: 'application/pdf'),
+        );
+        final url = web.URL.createObjectURL(blob);
+        final anchor = web.document.createElement('a') as web.HTMLAnchorElement
+          ..href = url
+          ..setAttribute('download', 'Sakshi_Resume.pdf')
+          ..style.display = 'none';
+        web.document.body!.append(anchor);
+        anchor.click();
+        anchor.remove();
+        web.URL.revokeObjectURL(url); // free memory
+      } else {
+        final data = await rootBundle.load('assets/resume/sakshi_resume.pdf');
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/Sakshi_Resume.pdf');
+        await file.writeAsBytes(data.buffer.asUint8List(), flush: true);
+        await OpenFilex.open(file.path);
+      }
+    } catch (e) {
+      debugPrint('Resume error: $e');
     }
   }
 
@@ -399,15 +440,7 @@ class _PremiumVolumetricHeroState extends State<_PremiumVolumetricHero>
                                   ],
                                 ),
                                 child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    const url =
-                                        'assets/resume/sakshi_resume.pdf';
-
-                                    await launchUrl(
-                                      Uri.parse(url),
-                                      mode: LaunchMode.externalApplication,
-                                    );
-                                  },
+                                  onPressed: downloadResume,
                                   icon: Icon(
                                     Icons.arrow_downward_rounded,
                                     size: 18,
