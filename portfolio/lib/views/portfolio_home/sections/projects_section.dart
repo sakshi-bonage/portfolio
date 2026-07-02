@@ -26,7 +26,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
           'A modern fitness application developed using Flutter and Firebase. Features workout tracking, progress analytics, goal setting, authentication, and responsive UI design.',
       'imagePath': 'assets/images/project2.png',
       'tech': ['Flutter', 'Firebase', 'Analytics', 'UI/UX'],
-      'url': 'https://github.com',
+      'url': 'https://github.com/sakshi-bonage/challenge_hub',
     },
     {
       'title': 'Mega Mall E-Commerce App',
@@ -35,7 +35,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
           'A comprehensive digital storefront designed for scale. Featuring real-time inventory, secure checkout, and a designer-led UI system that prioritizes user conversion and brand loyalty.',
       'imagePath': 'assets/images/project1.png',
       'tech': ['Flutter', 'REST API', 'Dart', 'State Management'],
-      'url': 'https://github.com',
+      'url': 'https://github.com/sakshi-bonage/freebies_e_commerce',
     },
     {
       'title': 'Sakshi Professional Portfolio Website',
