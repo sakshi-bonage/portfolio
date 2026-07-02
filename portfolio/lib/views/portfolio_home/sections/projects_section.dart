@@ -49,7 +49,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
         'Matrix Animations',
         'Clean Architecture',
       ],
-      'url': 'https://github.com',
+      'url': 'https://portfolio-f9c90.web.app',
     },
   ];
 
