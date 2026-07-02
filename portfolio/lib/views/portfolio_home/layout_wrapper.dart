@@ -44,7 +44,6 @@ class _LayoutWrapperState extends State<LayoutWrapper> {
 
   @override
   Widget build(BuildContext context) {
-
     final sections = [
       NavSectionConfig(title: 'Home', targetKey: _heroKey),
       NavSectionConfig(title: 'About', targetKey: _aboutKey),
@@ -55,6 +54,12 @@ class _LayoutWrapperState extends State<LayoutWrapper> {
 
     return Scaffold(
       key: _scaffoldKey,
+
+      drawer: MobileDrawer(
+        sections: sections,
+        scrollToSection: _scrollToSection,
+      ),
+
       backgroundColor: const Color(0xFF0D0E12),
       appBar: StickyHeaderBar(
         scrollController: _scrollController,
@@ -62,6 +67,7 @@ class _LayoutWrapperState extends State<LayoutWrapper> {
         scrollToSection: _scrollToSection,
         sections: sections,
       ),
+
       body: ResponsiveLayout(
         mobile: MobileViewport(
           heroKey: _heroKey,

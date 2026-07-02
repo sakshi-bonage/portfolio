@@ -327,3 +327,50 @@ class _AnimatedNavButtonState extends State<_AnimatedNavButton> {
     );
   }
 }
+class MobileDrawer extends StatelessWidget {
+  final List<NavSectionConfig> sections;
+  final void Function(GlobalKey) scrollToSection;
+
+  const MobileDrawer({
+    super.key,
+    required this.sections,
+    required this.scrollToSection,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      backgroundColor: const Color(0xFF0B0C10),
+      child: SafeArea(
+        child: ListView(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: Text(
+                '<> SRB',
+                style: TextStyle(
+                  color: Color(0xFF45F3FF),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            ...sections.map(
+              (section) => ListTile(
+                title: Text(
+                  section.title,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  scrollToSection(section.targetKey);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

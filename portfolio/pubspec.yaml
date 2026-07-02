@@ -74,6 +74,19 @@ flutter:
     - assets/images/project2.png
     - assets/images/project3.png
     - .env
+    - assets/images/c.png
+    - assets/images/cpp.png
+    - assets/images/css.png
+    - assets/images/dart.png
+    - assets/images/figma.png
+    - assets/images/firebase.png
+    - assets/images/flutter.png
+    - assets/images/github.png
+    - assets/images/html.png
+    - assets/images/java.png
+    - assets/images/mongodb.png
+    - assets/images/python.png
+    - assets/images/react.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

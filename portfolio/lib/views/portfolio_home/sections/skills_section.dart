@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 // ----------------------------------------------------
 // 1. DATA CONFIGURATION LAYERS
 // ----------------------------------------------------
-class SkillItem {
+class TechSkill {
   final String name;
-  final double mastery; // Value between 0.0 and 1.0 for graphic visual bars
-  final String? svgPath;
+  final String assetPath;
+  final Color brandColor;
 
-  const SkillItem({
+  const TechSkill({
     required this.name,
-    required this.mastery,
-    this.svgPath,
+    required this.assetPath,
+    required this.brandColor,
   });
 }
 
 // ----------------------------------------------------
-// 2. MAIN SECTION CONTAINER
+// 2. MAIN RESPONSIVE SKILLS GRID CONTAINER
 // ----------------------------------------------------
 class SkillsSection extends StatelessWidget {
   final GlobalKey sectionKey;
@@ -26,181 +26,158 @@ class SkillsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
-    final bool isMobile = width < 768;
-    final bool isTablet = width >= 768 && width < 1100;
-    final bool isStacked = isMobile || isTablet;
+    final bool isMobile = width < 600;
+    final bool isTablet = width >= 600 && width < 1024;
+
+    final List<TechSkill> skillsList = [
+      const TechSkill(
+        name: 'Flutter',
+        assetPath: 'assets/images/flutter.png',
+        brandColor: Colors.blueAccent,
+      ),
+      const TechSkill(
+        name: 'Dart',
+        assetPath: 'assets/images/dart.png',
+        brandColor: Colors.cyanAccent,
+      ),
+      const TechSkill(
+        name: 'Java',
+        assetPath: 'assets/images/java.png',
+        brandColor: Colors.orangeAccent,
+      ),
+      const TechSkill(
+        name: 'C',
+        assetPath: 'assets/images/c.png',
+        brandColor: Color.fromARGB(255, 104, 100, 230),
+      ),
+      const TechSkill(
+        name: 'C++',
+        assetPath: 'assets/images/cpp.png',
+        brandColor: Colors.blue,
+      ),
+      const TechSkill(
+        name: 'HTML',
+        assetPath: 'assets/images/html.png',
+        brandColor: Colors.deepOrange,
+      ),
+      const TechSkill(
+        name: 'CSS',
+        assetPath: 'assets/images/css.png',
+        brandColor: Color.fromARGB(255, 8, 56, 143),
+      ),
+      const TechSkill(
+        name: 'React',
+        assetPath: 'assets/images/react.png',
+        brandColor: Colors.lightBlueAccent,
+      ),
+      const TechSkill(
+        name: 'Firebase',
+        assetPath: 'assets/images/firebase.png',
+        brandColor: Color.fromARGB(255, 199, 116, 9),
+      ),
+      const TechSkill(
+        name: 'MongoDB',
+        assetPath: 'assets/images/mongodb.png',
+        brandColor: Colors.greenAccent,
+      ),
+      const TechSkill(
+        name: 'Python',
+        assetPath: 'assets/images/python.png',
+        brandColor: Color.fromARGB(255, 190, 220, 81),
+      ),
+      const TechSkill(
+        name: 'Github',
+        assetPath: 'assets/images/github.png',
+        brandColor: Colors.white,
+      ),
+      const TechSkill(
+        name: 'Figma',
+        assetPath: 'assets/images/figma.png',
+        brandColor: Colors.deepPurpleAccent,
+      ),
+    ];
 
     return Container(
       key: sectionKey,
       width: double.infinity,
-      color: const Color(0xFF0D0E12), // Deep Matte Space Canvas
+      color: const Color(0xFF0D0E12),
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 24 : 140,
-        vertical: isMobile ? 80 : 120,
+        horizontal: isMobile ? 24 : (isTablet ? 60 : 140),
+        vertical: isMobile ? 60 : 100,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section Header Indicator Subline
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 3,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.blueAccent, Colors.cyanAccent],
-                  ),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'EXPERTISE MATRIX',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.white38,
-                  letterSpacing: 4,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'TECHNICAL CAPABILITIES',
-            style: TextStyle(
-              fontSize: 42,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: -1.5,
-            ),
-          ),
-          const SizedBox(height: 64),
-
-          // Core Layout Grid Split Responsive Flex Blocks
-          Flex(
-            direction: isStacked ? Axis.vertical : Axis.horizontal,
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildResponsiveChild(
-                isStacked: isStacked,
-                child: const _SkillDashboardCard(
-                  title: 'USING NOW',
-                  description: 'Core stack systems built with production architecture.',
-                  items: [
-                    SkillItem(name: 'Dart', mastery: 0.90),
-                    SkillItem(name: 'Flutter', mastery: 0.92),
-                    SkillItem(name: 'Java', mastery: 0.80),
-                    SkillItem(name: 'Python', mastery: 0.75),
-                    SkillItem(name: 'Firebase', mastery: 0.85),
-                  ],
+              // Header
+              // Header
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Colors.blueAccent, Colors.cyanAccent],
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'MY EXPERTISE',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white38,
+                      letterSpacing: 4,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'TECHNICAL SKILLS',
+                style: TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: -1.5,
                 ),
               ),
-              if (isStacked) const SizedBox(height: 32),
-              _buildResponsiveChild(
-                isStacked: isStacked,
-                child: const _SkillDashboardCard(
-                  title: 'LEARNING NEXT',
-                  description: 'Proactively expanding frameworks capabilities.',
-                  items: [
-                    SkillItem(name: 'React', mastery: 0.50),
-                    SkillItem(name: 'Node.js', mastery: 0.45),
-                    SkillItem(name: 'MongoDB', mastery: 0.55),
-                    SkillItem(name: 'C++', mastery: 0.70),
-                  ],
+              const SizedBox(height: 20),
+              const SizedBox(
+                width: 650,
+                child: Text(
+                  'Technologies, frameworks and tools I use to build modern applications.',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: 16,
+                    height: 1.7,
+                  ),
                 ),
               ),
-              if (isStacked) const SizedBox(height: 32),
-              _buildResponsiveChild(
-                isStacked: isStacked,
-                child: const _SkillDashboardCard(
-                  title: 'DESIGN TOOLS',
-                  description: 'Prototyping high-fidelity UI systems assets.',
-                  items: [
-                    SkillItem(name: 'Figma', mastery: 0.85),
-                    SkillItem(name: 'Canva', mastery: 0.90),
-                  ],
+              const SizedBox(height: 64),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: skillsList.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isMobile ? 2 : 4,
+                  crossAxisSpacing: isMobile ? 12 : 20,
+                  mainAxisSpacing: isMobile ? 12 : 20,
+                  childAspectRatio: 1.15,
                 ),
+                itemBuilder: (context, index) {
+                  return _SkillTileCard(skill: skillsList[index]);
+                },
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResponsiveChild({required bool isStacked, required Widget child}) {
-    return isStacked ? child : Expanded(child: child);
-  }
-}
-
-// ----------------------------------------------------
-// 3. SUB-DASHBOARD CARD ARCHITECTURE
-// ----------------------------------------------------
-class _SkillDashboardCard extends StatelessWidget {
-  final String title;
-  final String description;
-  final List<SkillItem> items;
-
-  const _SkillDashboardCard({
-    required this.title,
-    required this.description,
-    required this.items,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    final bool isMobile = width < 768;
-
-    return Padding(
-      padding: EdgeInsets.only(right: isMobile ? 0 : 24),
-      child: Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: const Color(0xFF13151A), // Clean isolated card contrast
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.03),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 30,
-              offset: const Offset(0, 15),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header Structural Text Elements
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                color: Colors.blueAccent,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.white38,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            // Integrated Linear Status Metric Rows
-            ...items.map((skill) => _SkillProgressMetricRow(skill: skill)),
-          ],
         ),
       ),
     );
@@ -208,108 +185,238 @@ class _SkillDashboardCard extends StatelessWidget {
 }
 
 // ----------------------------------------------------
-// 4. ANIMATED PROGRESS BAR COEFFICIENT ROW
+// 3. SKILL TILE BLOCK WITH TILT & TRACING GLOW SHIMMER
 // ----------------------------------------------------
-class _SkillProgressMetricRow extends StatefulWidget {
-  final SkillItem skill;
+class _SkillTileCard extends StatefulWidget {
+  final TechSkill skill;
 
-  const _SkillProgressMetricRow({required this.skill});
+  const _SkillTileCard({required this.skill});
 
   @override
-  State<_SkillProgressMetricRow> createState() => _SkillProgressMetricRowState();
+  State<_SkillTileCard> createState() => _SkillTileCardState();
 }
 
-class _SkillProgressMetricRowState extends State<_SkillProgressMetricRow>
+class _SkillTileCardState extends State<_SkillTileCard>
     with SingleTickerProviderStateMixin {
-  late AnimationController _progressController;
-  late Animation<double> _barAnimation;
+  bool _isHovered = false;
+  double _rotateX = 0.0;
+  double _rotateY = 0.0;
+
+  late AnimationController _shimmerController;
 
   @override
   void initState() {
     super.initState();
-    _progressController = AnimationController(
+    // Continuous loop for the border shimmer tracing motion
+    _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-
-    _barAnimation = Tween<double>(begin: 0.0, end: widget.skill.mastery).animate(
-      CurvedAnimation(
-        parent: _progressController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-
-    _progressController.forward();
+      duration: const Duration(seconds: 4),
+    )..repeat();
   }
 
   @override
   void dispose() {
-    _progressController.dispose();
+    _shimmerController.dispose();
     super.dispose();
+  }
+
+  void _updateTilt(PointerEvent details, BoxConstraints constraints) {
+    final double centerX = constraints.maxWidth / 2;
+    final double centerY = constraints.maxHeight / 2;
+
+    setState(() {
+      _isHovered = true;
+      _rotateX = (centerY - details.localPosition.dy) / centerY * 0.12;
+      _rotateY = (details.localPosition.dx - centerX) / centerX * 0.12;
+    });
+  }
+
+  void _resetTilt() {
+    setState(() {
+      _isHovered = false;
+      _rotateX = 0.0;
+      _rotateY = 0.0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                widget.skill.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '${(widget.skill.mastery * 100).toInt()}%',
-                style: const TextStyle(
-                  color: Colors.white38,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          
-          // Layout-Safe Horizontal Linear Metric Track
-          AnimatedBuilder(
-            animation: _barAnimation,
-            builder: (context, child) {
-              return Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 5,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return MouseRegion(
+          onHover: (details) => _updateTilt(details, constraints),
+          onExit: (_) => _resetTilt(),
+          child: AnimatedTransform(
+            duration: const Duration(milliseconds: 150),
+            alignment: Alignment.center,
+
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.002)
+              ..rotateX(_rotateX)
+              ..rotateY(_rotateY)
+              ..scale(_isHovered ? 1.04 : 1.0, _isHovered ? 1.04 : 1.0, 1.0),
+
+            child: AnimatedBuilder(
+              animation: _shimmerController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _BorderGlowPainter(
+                    animationValue: _shimmerController.value,
+                    glowColor: widget.skill.brandColor,
+                    isHovered: _isHovered,
+                  ),
+                  child : Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(3),
+                      color: const Color(0xFF14161D),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        if (_isHovered)
+                          BoxShadow(
+                            color: widget.skill.brandColor.withValues(
+                              alpha: 0.15,
+                            ),
+                            blurRadius: 25,
+                            spreadRadius: -2,
+                          ),
+                      ],
                     ),
-                  ),
-                  FractionallySizedBox(
-                    widthFactor: _barAnimation.value,
-                    child: Container(
-                      height: 5,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.blueAccent, Colors.cyanAccent],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children:  [
+                        SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: Image.asset(
+                            widget.skill.assetPath,
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.skill.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+}
+
+// ----------------------------------------------------
+// 4. CUSTOM PAINTER FOR TRACING BORDER GLOW HIGH-FX
+// ----------------------------------------------------
+class _BorderGlowPainter extends CustomPainter {
+  final double animationValue;
+  final Color glowColor;
+  final bool isHovered;
+
+  _BorderGlowPainter({
+    required this.animationValue,
+    required this.glowColor,
+    required this.isHovered,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double borderRadius = 16.0;
+    final RRect rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(borderRadius),
+    );
+
+    // Baseline subtle border paint
+    final Paint baseBorderPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = Colors.white.withValues(alpha: isHovered ? 0.05 : 0.02);
+
+    canvas.drawRRect(rrect, baseBorderPaint);
+
+    // Sweeping high-intensity tracking neon glow paint
+    final Paint glowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = isHovered ? 2.0 : 1.5
+      ..shader = SweepGradient(
+        center: Alignment.center,
+        // Continuous sweep rotation transformation calculation mapping
+        transform: GradientRotation(animationValue * 2 * 3.141592653589793),
+        colors: [
+          glowColor.withValues(alpha: 0.0),
+          glowColor.withValues(
+            alpha: isHovered ? 0.8 : 0.3,
+          ), // Spikes illumination intensity on active pointer target
+          glowColor.withValues(alpha: 0.0),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    // Optional blur overlay mask to mimic a continuous light tube dispersion halo
+    if (isHovered) {
+      glowPaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+    }
+
+    canvas.drawRRect(rrect, glowPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BorderGlowPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue ||
+        oldDelegate.isHovered != isHovered ||
+        oldDelegate.glowColor != glowColor;
+  }
+}
+
+// ----------------------------------------------------
+// 5. ANIMATED TRANSFORM HELPER COMPONENT
+// ----------------------------------------------------
+class AnimatedTransform extends StatelessWidget {
+  final Widget child;
+  final Matrix4 transform;
+  final Duration duration;
+  final Alignment alignment;
+
+  const AnimatedTransform({
+    required this.child,
+    required this.transform,
+    required this.duration,
+    this.alignment = Alignment.center,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<Matrix4>(
+      tween: MatrixRouteTween(begin: Matrix4.identity(), end: transform),
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) =>
+          Transform(transform: value, alignment: alignment, child: child),
+      child: child,
+    );
+  }
+}
+
+class MatrixRouteTween extends Tween<Matrix4> {
+  MatrixRouteTween({super.begin, super.end});
+
+  @override
+  Matrix4 lerp(double t) {
+    final Matrix4 beginMatrix = begin ?? Matrix4.identity();
+    final Matrix4 endMatrix = end ?? Matrix4.identity();
+
+    // Uses the built-in, optimized Flutter matrix calculation directly
+    return Matrix4Tween(begin: beginMatrix, end: endMatrix).lerp(t);
   }
 }
